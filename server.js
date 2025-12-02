@@ -10,7 +10,7 @@ const path = require("path");
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-// Configuration multer
+// Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -20,32 +20,40 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Servir le dossier uploads
+// Servir les fichiers statiques
 app.use("/uploads", express.static(uploadDir));
 app.use(express.static("public"));
 
-// Route pour upload image
+// Route upload image
 app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).send("Pas de fichier");
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
+// Tableau des IP connectées
+const connectedIPs = new Set();
+
 // Socket.io
 io.on("connection", (socket) => {
-  console.log("Un utilisateur a rejoint");
+  const ip = socket.handshake.address || "IP inconnue";
+  connectedIPs.add(ip);
+  io.emit("updateIPs", Array.from(connectedIPs));
 
-  // Message texte
-  socket.on("chatMessage", (msg) => {
-    io.emit("chatMessage", { type: "text", data: msg });
-  });
+  console.log(`Nouvelle connexion : ${ip}`);
 
-  // Message image (envoie l’URL après upload)
-  socket.on("chatImage", (imgUrl) => {
-    io.emit("chatMessage", { type: "image", data: imgUrl });
+  // Messages
+  socket.on("chatMessage", (msg) => io.emit("chatMessage", { type: "text", data: msg }));
+  socket.on("chatImage", (imgUrl) => io.emit("chatMessage", { type: "image", data: imgUrl }));
+  socket.on("chatCode", (code) => io.emit("chatMessage", { type: "code", data: code }));
+
+  socket.on("disconnect", () => {
+    connectedIPs.delete(ip);
+    io.emit("updateIPs", Array.from(connectedIPs));
+    console.log(`Déconnexion : ${ip}`);
   });
 });
 
-// Reset du dossier toutes les 30 secondes
+// Reset du dossier uploads toutes les 30 secondes
 setInterval(() => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) return;

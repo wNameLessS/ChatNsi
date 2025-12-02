@@ -11,10 +11,16 @@
   </div>
 
   <form id="form">
-    <input id="input" type="text" placeholder="Écris un message..." autocomplete="off" />
+    <textarea id="input" placeholder="Écris un message..." rows="2"></textarea>
     <input type="file" id="fileInput" accept="image/*">
     <button type="submit">Envoyer</button>
+    <button type="button" id="codeBtn">Mode Code</button>
   </form>
+
+  <div id="ip-panel">
+    <h3>Connexions</h3>
+    <ul id="ip-list"></ul>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
