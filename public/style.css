@@ -1,4 +1,4 @@
-/* Général */
+/* === Général === */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -6,38 +6,33 @@ body {
   color: white;
 }
 
-/* Chat */
+/* === Chat === */
 #chat-box {
-  height: 80vh;
+  height: 70vh;
   overflow-y: scroll;
-  padding: 20px;
+  padding: 15px;
   background: #2b2d31;
   border-bottom: 2px solid #5865f2;
 }
 
-/* Messages */
+/* === Messages === */
 #messages li {
   list-style: none;
   padding: 10px;
-  margin: 10px 0;
+  margin: 8px 0;
   background: #3a3c41;
   border-radius: 8px;
   word-wrap: break-word;
-  transition: transform 0.1s;
-}
-
-#messages li:hover {
-  transform: scale(1.02);
 }
 
 #messages li img {
   display: block;
   margin-top: 5px;
   border-radius: 6px;
-  max-width: 300px;
+  max-width: 100%; /* Adaptation mobile */
 }
 
-/* Code */
+/* === Code === */
 pre {
   font-family: "Courier New", monospace;
   color: #f8f8f2;
@@ -48,52 +43,51 @@ pre {
   white-space: pre-wrap;
 }
 
-/* Formulaire */
+/* === Formulaire === */
 form {
   display: flex;
   flex-wrap: wrap;
   padding: 10px;
   background: #2b2d31;
   align-items: center;
+  gap: 5px;
 }
 
 textarea {
-  flex: 1;
+  flex: 1 1 100%;
   padding: 10px;
   border: none;
   border-radius: 4px;
   background: #1e1f22;
   color: white;
-  margin-right: 10px;
   resize: none;
 }
 
 input[type="file"] {
-  margin-right: 10px;
+  flex: 1 1 100%;
   color: white;
 }
 
 button {
-  padding: 10px 20px;
+  padding: 10px 15px;
   border: none;
   border-radius: 4px;
   background: #5865f2;
   color: white;
   cursor: pointer;
-  margin-right: 5px;
 }
 
 button:hover {
   background: #4752c4;
 }
 
-/* IP panel */
+/* === IP panel === */
 #ip-panel {
   position: fixed;
   top: 10px;
   right: 10px;
   width: 200px;
-  max-height: 300px;
+  max-height: 200px;
   overflow-y: auto;
   background: #2b2d31;
   padding: 10px;
@@ -104,12 +98,31 @@ button:hover {
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
+/* === Titres === */
 #ip-panel h3 {
   margin-top: 0;
   font-size: 14px;
   text-align: center;
 }
 
-#ip-panel ul {
-  padding-left: 10px;
+/* === Responsive mobile === */
+@media (max-width: 768px) {
+  #chat-box {
+    height: 60vh;
+    padding: 10px;
+  }
+
+  textarea, input[type="file"], button {
+    flex: 1 1 100%;
+    margin-bottom: 5px;
+  }
+
+  #ip-panel {
+    width: 150px;
+    font-size: 10px;
+    max-height: 150px;
+    top: auto;
+    bottom: 10px;
+    right: 10px;
+  }
 }
