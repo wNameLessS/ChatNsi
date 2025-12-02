@@ -30,8 +30,14 @@ app.post("/upload", upload.single("image"), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
-// Tableau des IP connectées
-const connectedIPs = new Set();
+// Essayez de récupérer l'IP publique
+let ip =
+  socket.handshake.headers["x-forwarded-for"] || // si derrière un proxy
+  socket.request.connection.remoteAddress ||     // fallback
+  "IP inconnue";
+
+// Si c'est en IPv6 local (::ffff:127.0.0.1), on nettoie pour IPv4
+if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
 
 // Socket.io
 io.on("connection", (socket) => {

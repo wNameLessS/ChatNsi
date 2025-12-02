@@ -9,6 +9,9 @@ const ipList = document.getElementById("ip-list");
 
 let isCodeMode = false;
 
+
+
+
 // Toggle mode code
 codeBtn.addEventListener("click", () => {
   isCodeMode = !isCodeMode;
