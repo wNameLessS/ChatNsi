@@ -10,7 +10,7 @@ const path = require("path");
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-// Multer config
+// Multer config pour upload images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Servir les fichiers statiques
+// Servir fichiers statiques
 app.use("/uploads", express.static(uploadDir));
 app.use(express.static("public"));
 
@@ -30,28 +30,41 @@ app.post("/upload", upload.single("image"), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
-// Essayez de récupérer l'IP publique
-let ip =
-  socket.handshake.headers["x-forwarded-for"] || // si derrière un proxy
-  socket.request.connection.remoteAddress ||     // fallback
-  "IP inconnue";
-
-// Si c'est en IPv6 local (::ffff:127.0.0.1), on nettoie pour IPv4
-if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
+// Tableau des IP connectées
+const connectedIPs = new Set();
 
 // Socket.io
 io.on("connection", (socket) => {
-  const ip = socket.handshake.address || "IP inconnue";
+  // Récupérer l'IP publique IPv4
+  let ip =
+    socket.handshake.headers["x-forwarded-for"] || // si derrière un proxy
+    socket.request.connection.remoteAddress ||     // fallback
+    "IP inconnue";
+
+  // Convertir IPv4 mappée en IPv6 (::ffff:127.0.0.1) en format normal
+  if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
+
   connectedIPs.add(ip);
   io.emit("updateIPs", Array.from(connectedIPs));
 
   console.log(`Nouvelle connexion : ${ip}`);
 
-  // Messages
-  socket.on("chatMessage", (msg) => io.emit("chatMessage", { type: "text", data: msg }));
-  socket.on("chatImage", (imgUrl) => io.emit("chatMessage", { type: "image", data: imgUrl }));
-  socket.on("chatCode", (code) => io.emit("chatMessage", { type: "code", data: code }));
+  // Réception des messages texte
+  socket.on("chatMessage", (msg) => {
+    io.emit("chatMessage", { type: "text", data: msg });
+  });
 
+  // Réception des messages code
+  socket.on("chatCode", (msg) => {
+    io.emit("chatMessage", { type: "code", data: msg });
+  });
+
+  // Réception des images
+  socket.on("chatImage", (msg) => {
+    io.emit("chatMessage", { type: "image", data: msg });
+  });
+
+  // Déconnexion
   socket.on("disconnect", () => {
     connectedIPs.delete(ip);
     io.emit("updateIPs", Array.from(connectedIPs));
@@ -70,5 +83,6 @@ setInterval(() => {
   });
 }, 30000);
 
+// Port
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => console.log("Serveur en ligne sur port " + PORT));
