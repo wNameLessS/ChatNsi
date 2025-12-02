@@ -37,31 +37,28 @@ const connectedIPs = new Set();
 io.on("connection", (socket) => {
   // Récupérer l'IP publique IPv4
   let ip =
-    socket.handshake.headers["x-forwarded-for"] || // si derrière un proxy
-    socket.request.connection.remoteAddress ||     // fallback
+    socket.handshake.headers["x-forwarded-for"] || 
+    socket.request.connection.remoteAddress ||     
     "IP inconnue";
-
-  // Convertir IPv4 mappée en IPv6 (::ffff:127.0.0.1) en format normal
   if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
 
   connectedIPs.add(ip);
   io.emit("updateIPs", Array.from(connectedIPs));
-
   console.log(`Nouvelle connexion : ${ip}`);
 
-  // Réception des messages texte
+  // Messages texte
   socket.on("chatMessage", (msg) => {
-    io.emit("chatMessage", { type: "text", data: msg });
+    io.emit("chatMessage", { type: "text", data: msg, username: ip });
   });
 
-  // Réception des messages code
+  // Messages code
   socket.on("chatCode", (msg) => {
-    io.emit("chatMessage", { type: "code", data: msg });
+    io.emit("chatMessage", { type: "code", data: msg, username: ip });
   });
 
-  // Réception des images
+  // Images
   socket.on("chatImage", (msg) => {
-    io.emit("chatMessage", { type: "image", data: msg });
+    io.emit("chatMessage", { type: "image", data: msg, username: ip });
   });
 
   // Déconnexion
