@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="chat-box">
+    <ul id="messages"></ul>
+  </div>
+
+  <form id="form">
+    <input id="input" type="text" placeholder="Écris un message..." autocomplete="off" />
+    <input type="file" id="fileInput" accept="image/*">
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

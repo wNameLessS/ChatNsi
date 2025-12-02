@@ -1,0 +1,57 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1e1f22;
+  color: white;
+}
+
+#chat-box {
+  height: 90vh;
+  overflow-y: scroll;
+  padding: 20px;
+}
+
+#messages li {
+  list-style: none;
+  padding: 10px;
+  margin: 10px 0;
+  background: #2b2d31;
+  border-radius: 6px;
+  word-wrap: break-word;
+}
+
+#messages li img {
+  display: block;
+  margin-top: 5px;
+}
+
+form {
+  display: flex;
+  padding: 10px;
+  background: #2b2d31;
+  align-items: center;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background: #1e1f22;
+  color: white;
+  margin-right: 10px;
+}
+
+input[type="file"] {
+  margin-right: 10px;
+  color: white;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background: #5865f2;
+  color: white;
+  cursor: pointer;
+}
