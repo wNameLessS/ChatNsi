@@ -78,3 +78,9 @@ socket.on("updateIPs", (ips) => {
     ipList.appendChild(li);
   });
 });
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !isCodeMode) {
+    e.preventDefault(); // Empêche le saut de ligne
+    form.dispatchEvent(new Event("submit")); // Soumet le formulaire
+  }
+});
