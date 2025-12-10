@@ -1,85 +1,52 @@
-const express = require("express");
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
-
-// Dossier temporaire pour les images
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-// Multer config pour upload images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
-
-// Servir fichiers statiques
-app.use("/uploads", express.static(uploadDir));
-app.use(express.static("public"));
-
-// Route upload image
-app.post("/upload", upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).send("Pas de fichier");
-  res.json({ url: `/uploads/${req.file.filename}` });
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+    },
 });
 
-// Tableau des IP connectées
-const connectedIPs = new Set();
-
-// Socket.io
-io.on("connection", (socket) => {
-  // Récupérer l'IP publique IPv4
-  let ip =
-    socket.handshake.headers["x-forwarded-for"] || 
-    socket.request.connection.remoteAddress ||     
-    "IP inconnue";
-  if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
-
-  connectedIPs.add(ip);
-  io.emit("updateIPs", Array.from(connectedIPs));
-  console.log(`Nouvelle connexion : ${ip}`);
-
-  // Messages texte
-  socket.on("chatMessage", (msg) => {
-    io.emit("chatMessage", { type: "text", data: msg, username: ip });
-  });
-
-  // Messages code
-  socket.on("chatCode", (msg) => {
-    io.emit("chatMessage", { type: "code", data: msg, username: ip });
-  });
-
-  // Images
-  socket.on("chatImage", (msg) => {
-    io.emit("chatMessage", { type: "image", data: msg, username: ip });
-  });
-
-  // Déconnexion
-  socket.on("disconnect", () => {
-    connectedIPs.delete(ip);
-    io.emit("updateIPs", Array.from(connectedIPs));
-    console.log(`Déconnexion : ${ip}`);
-  });
-});
-
-// Reset du dossier uploads toutes les 30 secondes
-setInterval(() => {
-  fs.readdir(uploadDir, (err, files) => {
-    if (err) return;
-    for (const file of files) {
-      fs.unlink(path.join(uploadDir, file), () => {});
+// Fonction pour extraire l'IP publique
+function getClientIp(socket) {
+    const forwarded = socket.handshake.headers["x-forwarded-for"];
+    if (forwarded) {
+        return forwarded.split(",")[0].trim();
     }
-    console.log("Dossier uploads vidé");
-  });
-}, 30000);
+    return socket.handshake.address.replace(/^::ffff:/, "");
+}
 
-// Port
+app.use(express.static(path.join(__dirname, "public")));
+
+io.on("connection", (socket) => {
+    const ip = getClientIp(socket);
+    console.log(`➡️ Nouveau client connecté : ${ip}`);
+
+    io.emit("ipListUpdate", getAllIps());
+
+    socket.on("chatMessage", (msg) => {
+        io.emit("chatMessage", { ip, msg });
+    });
+
+    socket.on("disconnect", () => {
+        console.log(`❌ Client déconnecté : ${ip}`);
+        io.emit("ipListUpdate", getAllIps());
+    });
+});
+
+function getAllIps() {
+    return Array.from(io.sockets.sockets.values()).map((s) =>
+        getClientIp(s)
+    );
+}
+
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log("Serveur en ligne sur port " + PORT));
+httpServer.listen(PORT, () => console.log("🚀 Serveur lancé sur le port", PORT));
